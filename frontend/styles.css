@@ -1,0 +1,480 @@
+:root {
+  --bg: #f5f1ea;
+  --surface: #fffdf9;
+  --surface-soft: #f3ede4;
+  --surface-strong: #f8f5ef;
+  --line: #e5ddd1;
+  --text: #1f1d1a;
+  --muted: #74695e;
+  --accent: #2f7d6a;
+  --accent-strong: #235f51;
+  --accent-soft: #dff1eb;
+  --danger: #b4534f;
+  --danger-soft: #f9e6e4;
+  --shadow: 0 14px 36px rgba(45, 35, 25, 0.08);
+  --radius: 22px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Manrope", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, #faf7f2 0%, var(--bg) 100%);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+input,
+select,
+textarea,
+label {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 0.95rem 1rem;
+  color: var(--text);
+  background: #fff;
+}
+
+textarea {
+  min-height: 94px;
+  resize: vertical;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+.app-shell {
+  width: min(100% - 1rem, 44rem);
+  margin: 0 auto;
+  padding: calc(1rem + env(safe-area-inset-top)) 0 calc(1.25rem + env(safe-area-inset-bottom));
+}
+
+.app-header,
+.hero-card,
+.tab-bar,
+.section-head,
+.action-row,
+.expense-row,
+.expense-actions,
+.toggle-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.app-header,
+.section-head {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-header {
+  margin-bottom: 0.9rem;
+}
+
+.eyebrow,
+.section-label,
+.field-label {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+h1 {
+  font-size: 1.72rem;
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.surface,
+.hero-card,
+.tab-bar {
+  background: rgba(255, 253, 249, 0.92);
+  border: 1px solid rgba(229, 221, 209, 0.92);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+}
+
+.tab-bar,
+.hero-card,
+.surface {
+  padding: 0.95rem;
+  margin-bottom: 0.85rem;
+}
+
+.hero-card {
+  flex-direction: column;
+}
+
+.hero-card p,
+.status-pill,
+.balance-card p,
+.expense-meta,
+.mini-report p,
+label {
+  color: var(--muted);
+}
+
+.page-section.hidden,
+.hidden {
+  display: none !important;
+}
+
+.tab-bar {
+  position: sticky;
+  top: 0.6rem;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.tab-link,
+.primary-button,
+.secondary-button,
+.icon-button,
+.text-button,
+.group-tab,
+.choice-card,
+.chip-option,
+.toggle-chip,
+.status-pill,
+.soft-badge {
+  border-radius: 999px;
+}
+
+.tab-link,
+.primary-button,
+.secondary-button,
+.icon-button {
+  min-height: 48px;
+}
+
+.tab-link,
+.secondary-button,
+.icon-button {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.tab-link.active {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.primary-button {
+  background: var(--accent);
+  color: #fff;
+  padding: 0.92rem 1.15rem;
+  font-weight: 700;
+}
+
+.secondary-button,
+.icon-button {
+  padding: 0.92rem 1.15rem;
+}
+
+.text-button {
+  background: transparent;
+  color: var(--muted);
+  padding: 0.2rem 0;
+}
+
+.danger-text {
+  color: var(--danger);
+}
+
+.status-pill,
+.soft-badge,
+.toggle-chip,
+.allocation-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.86rem;
+}
+
+.status-pill,
+.soft-badge,
+.toggle-chip {
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+  padding: 0.55rem 0.8rem;
+}
+
+.status-pill.online {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  border-color: #c8e2d9;
+}
+
+.status-pill.offline {
+  background: #f8efd9;
+  color: #8b6b2d;
+  border-color: #efdfb5;
+}
+
+.stack-form,
+.group-tabs,
+.expense-list,
+.report-stack,
+.chip-grid,
+.settlement-list,
+.action-grid,
+.balance-grid,
+.two-up,
+.split-choice {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.action-grid,
+.two-up,
+.balance-grid,
+.split-choice {
+  grid-template-columns: 1fr;
+}
+
+.group-tabs {
+  grid-template-columns: 1fr;
+}
+
+.group-tab {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--text);
+  text-align: left;
+}
+
+.group-tab.active {
+  background: var(--accent-soft);
+  border-color: #c6e3da;
+  color: var(--accent-strong);
+}
+
+.mini-card,
+.balance-card,
+.expense-item,
+.mini-report,
+.settlement-item {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+
+.mini-card,
+.balance-card,
+.mini-report,
+.settlement-item {
+  padding: 1rem;
+}
+
+.balance-card span {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.balance-card strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 1.26rem;
+}
+
+.primary-balance {
+  background: linear-gradient(180deg, #f7fcfa 0%, #eef8f4 100%);
+  border-color: #cfe6de;
+}
+
+.settle-actions {
+  flex-wrap: wrap;
+  margin-top: 0.9rem;
+}
+
+.settle-actions > * {
+  flex: 1 1 10rem;
+}
+
+.chip-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chip-option,
+.choice-card,
+.toggle-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+  padding: 0.9rem 1rem;
+  color: var(--text);
+}
+
+.chip-option.active {
+  background: var(--accent-soft);
+  border-color: #c6e3da;
+  color: var(--accent-strong);
+}
+
+.chip-option input,
+.choice-card input,
+.toggle-chip input {
+  width: auto;
+  margin: 0;
+}
+
+.expense-item {
+  padding: 0.95rem 1rem;
+}
+
+.expense-main {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.expense-row {
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.expense-row h3 {
+  font-size: 1rem;
+}
+
+.expense-amount {
+  color: var(--accent-strong);
+}
+
+.expense-meta {
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.expense-actions {
+  margin-top: 0.55rem;
+}
+
+.allocation-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.allocation-chip {
+  background: var(--surface-soft);
+  color: var(--text);
+  padding: 0.42rem 0.68rem;
+}
+
+.mini-report strong,
+.settlement-item strong,
+.mini-card strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.toggle-row,
+.action-row,
+.expense-actions {
+  flex-wrap: wrap;
+}
+
+.action-row > * {
+  flex: 1 1 10rem;
+}
+
+.empty-state {
+  border: 1px dashed var(--line);
+  border-radius: 18px;
+  padding: 1rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (min-width: 720px) {
+  .app-shell {
+    width: min(100% - 1.5rem, 66rem);
+  }
+
+  .hero-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .action-grid,
+  .two-up,
+  .balance-grid,
+  .split-choice {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .group-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chip-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 980px) {
+  .app-shell {
+    width: min(100% - 2rem, 74rem);
+  }
+
+  .group-tabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .chip-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

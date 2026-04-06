@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Splitense</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Shared expenses made simple</p>
+        <h1>Splitense</h1>
+      </div>
+      <div class="status-pill" id="connectionStatus">Checking connection...</div>
+    </header>
+
+    <nav class="tab-bar" aria-label="App sections">
+      <button type="button" class="tab-link active" data-section="main">Home</button>
+      <button type="button" class="tab-link" data-section="reports">Reports</button>
+      <button type="button" class="tab-link" data-section="settings">Settings</button>
+    </nav>
+
+    <section id="section-main" class="page-section active">
+      <section class="surface hero-card">
+        <div>
+          <h2>Track once. Everyone stays updated.</h2>
+          <p>Create a group, share the code, add expenses, and instantly see who owes whom.</p>
+        </div>
+        <button id="openExpenseButton" class="primary-button" type="button">Add new expense</button>
+      </section>
+
+      <section class="surface">
+        <div class="section-head">
+          <div>
+            <p class="section-label">Groups</p>
+            <h2>Create or join</h2>
+          </div>
+        </div>
+
+        <div class="action-grid">
+          <form id="groupForm" class="stack-form mini-card">
+            <strong>Create group</strong>
+            <label>
+              Group name
+              <input id="groupName" type="text" placeholder="Goa trip" required>
+            </label>
+            <label>
+              Members
+              <input id="groupMembers" type="text" placeholder="Ava, Liam, Noah">
+            </label>
+            <button class="primary-button" type="submit">Create and get code</button>
+          </form>
+
+          <form id="joinGroupForm" class="stack-form mini-card">
+            <strong>Join by code</strong>
+            <label>
+              Invite code
+              <input id="inviteCode" type="text" placeholder="ABC123" required>
+            </label>
+            <label>
+              Your name
+              <input id="memberName" type="text" placeholder="Your name" required>
+            </label>
+            <button class="secondary-button" type="submit">Join group</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="surface">
+        <div class="section-head">
+          <div>
+            <p class="section-label">Your groups</p>
+            <h2>Select a group</h2>
+          </div>
+        </div>
+        <div id="groupTabs" class="group-tabs"></div>
+      </section>
+
+      <section class="surface">
+        <div class="section-head">
+          <div>
+            <p class="section-label">Balance</p>
+            <h2 id="activeGroupTitle">All expenses</h2>
+          </div>
+          <span id="groupCodeBadge" class="soft-badge hidden"></span>
+        </div>
+
+        <div class="balance-grid">
+          <article class="balance-card primary-balance">
+            <span>Your position</span>
+            <strong id="balanceHeadline">All settled up</strong>
+            <p id="balanceSubtext">Pick a group to see who owes what.</p>
+          </article>
+          <article class="balance-card">
+            <span>Group total</span>
+            <strong id="groupTotal">INR 0.00</strong>
+            <p id="groupMeta">No shared expenses yet.</p>
+          </article>
+        </div>
+
+        <div class="action-row settle-actions">
+          <button id="toggleSettlementsButton" class="secondary-button" type="button">Show settle up</button>
+          <button id="exportPdfButton" class="secondary-button" type="button">Export PDF</button>
+        </div>
+
+        <div id="settlementPanel" class="hidden">
+          <div id="settlementList" class="settlement-list"></div>
+        </div>
+      </section>
+
+      <section id="expenseComposer" class="surface composer hidden">
+        <div class="section-head">
+          <div>
+            <p class="section-label">Quick add</p>
+            <h2 id="formTitle">Add an expense</h2>
+          </div>
+          <button id="closeExpenseButton" class="icon-button" type="button">Close</button>
+        </div>
+
+        <form id="expenseForm" class="stack-form">
+          <input type="hidden" id="expenseId">
+
+          <label>
+            What was paid for?
+            <input id="title" name="title" type="text" maxlength="50" placeholder="Dinner, taxi, tickets" required>
+          </label>
+
+          <div class="two-up">
+            <label>
+              Amount
+              <input id="amount" name="amount" type="number" min="0.01" step="0.01" placeholder="0.00" required>
+            </label>
+            <label>
+              Date
+              <input id="date" name="date" type="date" required>
+            </label>
+          </div>
+
+          <div class="two-up">
+            <label>
+              Category
+              <select id="category" name="category">
+                <option value="Food">Food</option>
+                <option value="Travel">Travel</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Bills">Bills</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Other">Other</option>
+              </select>
+            </label>
+            <label>
+              Expense type
+              <select id="expenseType" name="expenseType">
+                <option value="shared">Shared with group</option>
+                <option value="personal">Personal only</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="sharedFields" class="stack-form">
+            <div class="two-up">
+              <label>
+                Group
+                <select id="groupId" name="groupId"></select>
+              </label>
+              <label>
+                Paid by
+                <select id="paidBy" name="paidBy"></select>
+              </label>
+            </div>
+
+            <div>
+              <p class="field-label">Split with</p>
+              <div id="participantSelector" class="chip-grid"></div>
+            </div>
+
+            <div class="split-choice">
+              <label class="choice-card">
+                <input type="radio" name="splitType" value="equal" checked>
+                <span>Split equally</span>
+              </label>
+              <label class="choice-card">
+                <input type="radio" name="splitType" value="manual">
+                <span>Custom split</span>
+              </label>
+            </div>
+
+            <label id="manualSplitField" class="hidden">
+              Custom split
+              <textarea id="manualSplit" rows="4" placeholder="Ava: 500&#10;Liam: 300"></textarea>
+            </label>
+          </div>
+
+          <label>
+            Notes
+            <input id="notes" name="notes" type="text" placeholder="Optional">
+          </label>
+
+          <div class="action-row">
+            <button class="primary-button" type="submit">Save expense</button>
+            <button id="cancelEditButton" class="secondary-button hidden" type="button">Cancel edit</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="surface">
+        <div class="section-head">
+          <div>
+            <p class="section-label">Activity</p>
+            <h2>Recent expenses</h2>
+          </div>
+        </div>
+        <div id="expenseList" class="expense-list"></div>
+      </section>
+    </section>
+
+    <section id="section-reports" class="page-section hidden">
+      <section class="surface">
+        <div class="section-head">
+          <div>
+            <p class="section-label">Reports</p>
+            <h2>Automatic summaries</h2>
+          </div>
+          <button id="runReportsButton" class="secondary-button" type="button">Run now</button>
+        </div>
+        <div class="report-stack">
+          <article class="mini-report">
+            <strong>Weekly summary</strong>
+            <p id="weeklyReportBody">Waiting for the first summary.</p>
+          </article>
+          <article class="mini-report">
+            <strong>Monthly report</strong>
+            <p id="monthlyReportBody">Waiting for the first report.</p>
+          </article>
+        </div>
+      </section>
+    </section>
+
+    <section id="section-settings" class="page-section hidden">
+      <section class="surface">
+        <div class="section-head">
+          <div>
+            <p class="section-label">Profile</p>
+            <h2>Your preferences</h2>
+          </div>
+        </div>
+        <form id="settingsForm" class="stack-form">
+          <label>
+            Your name
+            <input id="userName" type="text" placeholder="You">
+          </label>
+          <div class="two-up">
+            <label>
+              Report email
+              <input id="reportEmail" type="email" placeholder="name@example.com">
+            </label>
+            <label>
+              WhatsApp
+              <input id="whatsappNumber" type="text" placeholder="+91XXXXXXXXXX">
+            </label>
+          </div>
+          <div class="toggle-row">
+            <label class="toggle-chip"><input id="emailEnabled" type="checkbox"><span>Email reports</span></label>
+            <label class="toggle-chip"><input id="whatsappEnabled" type="checkbox"><span>WhatsApp reports</span></label>
+          </div>
+          <button class="secondary-button" type="submit">Save preferences</button>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <template id="expenseItemTemplate">
+    <article class="expense-item">
+      <div class="expense-main">
+        <div class="expense-row">
+          <h3 class="expense-title"></h3>
+          <strong class="expense-amount"></strong>
+        </div>
+        <p class="expense-meta"></p>
+        <div class="allocation-list"></div>
+      </div>
+      <div class="expense-actions">
+        <button class="text-button edit-expense" type="button">Edit</button>
+        <button class="text-button danger-text delete-expense" type="button">Delete</button>
+      </div>
+    </article>
+  </template>
+
+  <script src="/app.js"></script>
+</body>
+</html>

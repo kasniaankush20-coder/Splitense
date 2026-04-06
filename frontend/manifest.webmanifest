@@ -1,0 +1,10 @@
+{
+  "name": "Splitense",
+  "short_name": "Splitense",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f1ea",
+  "theme_color": "#2f7d6a",
+  "description": "A simple shared expense tracker for groups and personal spending.",
+  "icons": []
+}

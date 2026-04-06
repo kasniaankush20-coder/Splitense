@@ -1,0 +1,14 @@
+{
+  "name": "expense-tracker-mvp",
+  "version": "1.0.0",
+  "description": "Full-stack expense tracking MVP with automated reporting and shared expense splitting.",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "nodemailer": "^6.10.0"
+  }
+}

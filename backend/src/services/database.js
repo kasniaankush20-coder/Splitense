@@ -9,10 +9,13 @@ const databasePath = path.join(dataDirectory, "db.json");
 
 function createDefaultDatabase() {
   return {
-    schemaVersion: 2,
+    schemaVersion: 4,
     users: [],
     expenses: [],
     groups: [],
+    ai: {
+      conversations: [],
+    },
     reports: {
       weekly: [],
       monthly: [],
@@ -54,8 +57,31 @@ function saveDatabase(database) {
 }
 
 function migrateDatabase(database) {
-  if (database.schemaVersion === 2 && Array.isArray(database.users)) {
+  if (database.schemaVersion === 4 && Array.isArray(database.users)) {
+    return {
+      ...database,
+      ai: {
+        conversations: Array.isArray(database.ai?.conversations) ? database.ai.conversations : [],
+      },
+    };
+  }
+
+  if (database.schemaVersion === 3 && Array.isArray(database.users)) {
     return database;
+  }
+
+  if (database.schemaVersion === 2 && Array.isArray(database.users)) {
+    return {
+      ...database,
+      schemaVersion: 4,
+      users: database.users.map((user) => ({
+        ...user,
+        customCategoryRules: Array.isArray(user.customCategoryRules) ? user.customCategoryRules : [],
+      })),
+      ai: {
+        conversations: [],
+      },
+    };
   }
 
   const next = createDefaultDatabase();
@@ -67,6 +93,7 @@ function migrateDatabase(database) {
     whatsappNumber: legacySettings.whatsappNumber || "",
     emailEnabled: Boolean(legacySettings.emailEnabled),
     whatsappEnabled: Boolean(legacySettings.whatsappEnabled),
+    customCategoryRules: [],
     createdAt: new Date().toISOString(),
   };
 
@@ -143,6 +170,7 @@ function migrateDatabase(database) {
   next.reports.notifications = notifications.map((notification) => ({ ...notification, userId: legacyUser.id }));
   next.reports.lastWeeklySentAt = database.reports?.lastWeeklySentAt || null;
   next.reports.lastMonthlySentAt = database.reports?.lastMonthlySentAt || null;
+  next.ai.conversations = Array.isArray(database.ai?.conversations) ? database.ai.conversations : [];
 
   return next;
 }
@@ -168,6 +196,7 @@ function resolveLegacyUserId(name, legacyUser, memberMap, users) {
     whatsappNumber: "",
     emailEnabled: false,
     whatsappEnabled: false,
+    customCategoryRules: [],
     createdAt: new Date().toISOString(),
   };
   users.push(user);

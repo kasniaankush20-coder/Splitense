@@ -1,4 +1,5 @@
 const sessionStorageKey = "expense-flow-session";
+const assistantSessionStorageKey = "splitense-ai-session";
 
 const state = {
   online: false,
@@ -12,6 +13,12 @@ const state = {
   editingExpenseId: null,
   activeSection: "main",
   settlementsVisible: false,
+  categoryPrediction: null,
+  categoryTouched: false,
+  categorySuggestionTimer: null,
+  notifications: [],
+  assistantMessages: [],
+  assistantSessionId: readAssistantSessionId(),
 };
 
 const elements = {
@@ -20,6 +27,7 @@ const elements = {
   sections: {
     main: document.getElementById("section-main"),
     reports: document.getElementById("section-reports"),
+    assistant: document.getElementById("section-assistant"),
     settings: document.getElementById("section-settings"),
   },
   openExpenseButton: document.getElementById("openExpenseButton"),
@@ -43,6 +51,7 @@ const elements = {
   amount: document.getElementById("amount"),
   date: document.getElementById("date"),
   category: document.getElementById("category"),
+  categoryHint: document.getElementById("categoryHint"),
   expenseType: document.getElementById("expenseType"),
   sharedFields: document.getElementById("sharedFields"),
   groupId: document.getElementById("groupId"),
@@ -63,11 +72,15 @@ const elements = {
   runReportsButton: document.getElementById("runReportsButton"),
   weeklyReportBody: document.getElementById("weeklyReportBody"),
   monthlyReportBody: document.getElementById("monthlyReportBody"),
+  notificationList: document.getElementById("notificationList"),
+  assistantMessages: document.getElementById("assistantMessages"),
+  assistantForm: document.getElementById("assistantForm"),
+  assistantInput: document.getElementById("assistantInput"),
   settingsForm: document.getElementById("settingsForm"),
+  savePreferencesButton: document.getElementById("savePreferencesButton"),
+  settingsStatus: document.getElementById("settingsStatus"),
   userName: document.getElementById("userName"),
-  reportEmail: document.getElementById("reportEmail"),
   whatsappNumber: document.getElementById("whatsappNumber"),
-  emailEnabled: document.getElementById("emailEnabled"),
   whatsappEnabled: document.getElementById("whatsappEnabled"),
 };
 
@@ -89,13 +102,23 @@ function attachEventListeners() {
   elements.expenseForm.addEventListener("submit", handleExpenseSubmit);
   elements.expenseType.addEventListener("change", syncExpenseMode);
   elements.groupId.addEventListener("change", handleComposerGroupChange);
+  elements.title.addEventListener("input", scheduleCategorySuggestion);
+  elements.notes.addEventListener("input", scheduleCategorySuggestion);
+  elements.category.addEventListener("change", handleCategoryChange);
   elements.cancelEditButton.addEventListener("click", resetExpenseForm);
   elements.groupTabs.addEventListener("click", handleGroupTabClick);
   elements.expenseList.addEventListener("click", handleExpenseListActions);
   elements.groupForm.addEventListener("submit", handleGroupCreate);
   elements.joinGroupForm.addEventListener("submit", handleGroupJoin);
   elements.runReportsButton.addEventListener("click", handleRunReports);
+  elements.assistantForm.addEventListener("submit", handleAssistantSubmit);
+  document.querySelectorAll("[data-ai-prompt]").forEach((button) => {
+    button.addEventListener("click", () => submitAssistantPrompt(button.dataset.aiPrompt || ""));
+  });
   elements.settingsForm.addEventListener("submit", handleSettingsSubmit);
+  [elements.whatsappEnabled].forEach((input) => {
+    input.addEventListener("change", syncSettingsToggleState);
+  });
   elements.toggleSettlementsButton.addEventListener("click", toggleSettlements);
   elements.exportPdfButton.addEventListener("click", exportSettlementPdf);
   document.querySelectorAll('input[name="splitType"]').forEach((input) => {
@@ -137,13 +160,15 @@ async function ensureSession() {
 }
 
 async function loadAppData() {
-  const [health, expenses, groups, settings, weeklyReport, monthlyReport] = await Promise.all([
+  const [health, expenses, groups, settings, weeklyReport, monthlyReport, notifications, conversation] = await Promise.all([
     apiRequest("/api/health", { skipAuth: true }),
     apiRequest("/api/expenses"),
     apiRequest("/api/groups"),
     apiRequest("/api/settings"),
     apiRequest("/api/reports/weekly/latest"),
     apiRequest("/api/reports/monthly/latest"),
+    apiRequest("/api/notifications"),
+    apiRequest(`/api/ai/conversations/${state.assistantSessionId}`),
   ]);
 
   state.online = Boolean(health && health.ok);
@@ -152,6 +177,8 @@ async function loadAppData() {
   state.settings = settings || defaultSettings();
   state.weeklyReport = weeklyReport || null;
   state.monthlyReport = monthlyReport || null;
+  state.notifications = notifications || [];
+  state.assistantMessages = conversation?.messages?.length ? conversation.messages : buildAssistantWelcome();
   state.selectedGroupId = state.groups[0]?.id || null;
 
   syncConnectionStatus();
@@ -179,6 +206,8 @@ function renderAll() {
   renderBalanceSummary();
   renderExpenses();
   renderReports();
+  renderNotifications();
+  renderAssistantMessages();
 }
 
 function renderGroupTabs() {
@@ -223,7 +252,7 @@ function renderBalanceSummary() {
   elements.groupCodeBadge.textContent = `Code: ${selectedGroup.inviteCode}`;
   elements.groupCodeBadge.classList.remove("hidden");
   elements.groupTotal.textContent = formatCurrency(sumAmounts(groupExpenses));
-  elements.groupMeta.textContent = `${selectedGroup.members.length} member${selectedGroup.members.length === 1 ? "" : "s"} � ${groupExpenses.length} visible expense${groupExpenses.length === 1 ? "" : "s"}`;
+  elements.groupMeta.textContent = `${selectedGroup.members.length} member${selectedGroup.members.length === 1 ? "" : "s"} • ${groupExpenses.length} visible expense${groupExpenses.length === 1 ? "" : "s"}`;
 
   if (userNet > 0.009) {
     elements.balanceHeadline.textContent = `You should receive ${formatCurrency(userNet)}`;
@@ -276,6 +305,32 @@ function renderReports() {
   elements.monthlyReportBody.textContent = state.monthlyReport?.message || "Monthly reports will appear here automatically.";
 }
 
+function renderNotifications() {
+  elements.notificationList.innerHTML = state.notifications.length
+    ? state.notifications.map((notification) => `
+      <article class="notification-item">
+        <div class="expense-row">
+          <strong>${capitalize(notification.channel)}</strong>
+          <span class="status-badge ${String(notification.status || "").toLowerCase()}">${notification.status || "unknown"}</span>
+        </div>
+        <p>${notification.message || "Notification recorded."}</p>
+        <small>${formatDateTime(notification.createdAt)}${notification.provider ? ` • ${notification.provider}` : ""}</small>
+      </article>
+    `).join("")
+    : '<div class="empty-state">No communication activity yet. Enable email or WhatsApp and run a report.</div>';
+}
+
+function renderAssistantMessages() {
+  const messages = state.assistantMessages.length ? state.assistantMessages : buildAssistantWelcome();
+  elements.assistantMessages.innerHTML = messages.map((message) => `
+    <article class="assistant-message ${message.role}">
+      <span>${message.role === "assistant" ? "Splitense AI" : "You"}</span>
+      <p>${escapeHtml(message.content || "").replace(/\n/g, "<br>")}</p>
+    </article>
+  `).join("");
+  elements.assistantMessages.scrollTop = elements.assistantMessages.scrollHeight;
+}
+
 function renderParticipantSelector() {
   const group = state.groups.find((item) => item.id === elements.groupId.value) || getSelectedGroup();
   const members = group?.members || [];
@@ -308,6 +363,80 @@ function syncExpenseMode() {
 function handleComposerGroupChange() {
   populatePaidBySelect();
   renderParticipantSelector();
+}
+
+function handleCategoryChange() {
+  state.categoryTouched = true;
+  renderCategoryHint();
+}
+
+function scheduleCategorySuggestion() {
+  if (state.categorySuggestionTimer) {
+    window.clearTimeout(state.categorySuggestionTimer);
+  }
+
+  state.categorySuggestionTimer = window.setTimeout(() => {
+    requestCategorySuggestion();
+  }, 250);
+}
+
+async function requestCategorySuggestion() {
+  const merchant = elements.title.value.trim();
+  const notes = elements.notes.value.trim();
+
+  if (!merchant && !notes) {
+    state.categoryPrediction = null;
+    renderCategoryHint();
+    return;
+  }
+
+  const prediction = await apiRequest("/api/categorization/predict", {
+    method: "POST",
+    body: {
+      merchant,
+      keyword: merchant,
+      notes,
+      amount: Number(elements.amount.value || 0),
+      date: elements.date.value || formatDateInput(new Date()),
+    },
+  });
+
+  if (!prediction) {
+    return;
+  }
+
+  state.categoryPrediction = prediction;
+
+  if (!state.categoryTouched && prediction.category && optionExists(elements.category, prediction.category)) {
+    elements.category.value = prediction.category;
+  }
+
+  renderCategoryHint();
+}
+
+function renderCategoryHint() {
+  const prediction = state.categoryPrediction;
+  if (!prediction?.category) {
+    elements.categoryHint.textContent = "";
+    elements.categoryHint.classList.add("hidden");
+    return;
+  }
+
+  const strategyText = prediction.match_strategy === "user_rule"
+    ? "Using your saved category rule."
+    : prediction.match_strategy === "historical_pattern"
+      ? "Suggested from your past expense history."
+      : prediction.match_strategy === "default_rule"
+        ? "Suggested from Splitense default categorization."
+        : "Category may need a quick review.";
+
+  const confidenceText = `Confidence ${Math.round(Number(prediction.confidence || 0) * 100)}%.`;
+  const learningText = elements.category.value !== prediction.category
+    ? "Saving a different category will teach Splitense your preference."
+    : "";
+
+  elements.categoryHint.textContent = [strategyText, confidenceText, learningText].filter(Boolean).join(" ");
+  elements.categoryHint.classList.remove("hidden");
 }
 
 function handleGroupTabClick(event) {
@@ -410,6 +539,8 @@ async function handleExpenseListActions(event) {
 
 function loadExpenseIntoForm(expense) {
   state.editingExpenseId = expense.id;
+  state.categoryTouched = true;
+  state.categoryPrediction = null;
   elements.formTitle.textContent = "Edit expense";
   elements.expenseId.value = expense.id;
   elements.title.value = expense.title || "";
@@ -430,11 +561,14 @@ function loadExpenseIntoForm(expense) {
   renderParticipantSelector();
   elements.cancelEditButton.classList.remove("hidden");
   syncExpenseMode();
+  requestCategorySuggestion();
   openComposer();
 }
 
 function resetExpenseForm() {
   state.editingExpenseId = null;
+  state.categoryTouched = false;
+  state.categoryPrediction = null;
   elements.formTitle.textContent = "Add an expense";
   elements.expenseForm.reset();
   elements.date.value = formatDateInput(new Date());
@@ -446,6 +580,7 @@ function resetExpenseForm() {
   populatePaidBySelect();
   renderParticipantSelector();
   syncExpenseMode();
+  renderCategoryHint();
 }
 
 function openComposer() {
@@ -499,26 +634,62 @@ async function handleRunReports() {
   if (result) {
     state.weeklyReport = result.weeklyReport;
     state.monthlyReport = result.monthlyReport;
+    state.notifications = result.notifications || state.notifications;
     renderReports();
+    renderNotifications();
     setActiveSection("reports");
   }
 }
 
+async function handleAssistantSubmit(event) {
+  event.preventDefault();
+  await submitAssistantPrompt(elements.assistantInput.value.trim());
+}
+
+async function submitAssistantPrompt(prompt) {
+  if (!prompt) {
+    return;
+  }
+
+  state.assistantMessages = [...state.assistantMessages, { role: "user", content: prompt }];
+  renderAssistantMessages();
+  elements.assistantInput.value = "";
+
+  const result = await apiRequest("/api/ai/chat", {
+    method: "POST",
+    body: {
+      message: prompt,
+      sessionId: state.assistantSessionId,
+    },
+  });
+
+  if (!result) {
+    state.assistantMessages = [...state.assistantMessages, { role: "assistant", content: "I couldn’t reach the assistant right now. Please try again in a moment." }];
+    renderAssistantMessages();
+    return;
+  }
+
+  state.assistantMessages = result.conversation?.messages || [...state.assistantMessages, { role: "assistant", content: result.reply }];
+  renderAssistantMessages();
+}
+
 async function handleSettingsSubmit(event) {
   event.preventDefault();
+  setSettingsStatus("Saving preferences...", "info");
+  elements.savePreferencesButton.disabled = true;
+
   const result = await apiRequest("/api/settings", {
     method: "PUT",
     body: {
       userName: elements.userName.value.trim() || currentUserName(),
-      reportEmail: elements.reportEmail.value.trim(),
       whatsappNumber: elements.whatsappNumber.value.trim(),
-      emailEnabled: elements.emailEnabled.checked,
       whatsappEnabled: elements.whatsappEnabled.checked,
     },
   });
 
   if (!result) {
-    window.alert("Unable to save settings.");
+    setSettingsStatus("Unable to save settings. Please try again.", "error");
+    elements.savePreferencesButton.disabled = false;
     return;
   }
 
@@ -526,15 +697,18 @@ async function handleSettingsSubmit(event) {
   state.currentUser.displayName = result.userName;
   writeSession(state.currentUser);
   await refreshCollections();
+  setSettingsStatus("Preferences saved.", "success");
+  elements.savePreferencesButton.disabled = false;
 }
 
 async function refreshCollections() {
-  const [expenses, groups, settings, weeklyReport, monthlyReport] = await Promise.all([
+  const [expenses, groups, settings, weeklyReport, monthlyReport, notifications] = await Promise.all([
     apiRequest("/api/expenses"),
     apiRequest("/api/groups"),
     apiRequest("/api/settings"),
     apiRequest("/api/reports/weekly/latest"),
     apiRequest("/api/reports/monthly/latest"),
+    apiRequest("/api/notifications"),
   ]);
 
   state.expenses = expenses || [];
@@ -542,6 +716,7 @@ async function refreshCollections() {
   state.settings = settings || state.settings;
   state.weeklyReport = weeklyReport || state.weeklyReport;
   state.monthlyReport = monthlyReport || state.monthlyReport;
+  state.notifications = notifications || state.notifications;
 
   if (!state.groups.some((group) => group.id === state.selectedGroupId)) {
     state.selectedGroupId = state.groups[0]?.id || null;
@@ -574,10 +749,22 @@ function populatePaidBySelect() {
 function fillSettingsForm() {
   const settings = state.settings || defaultSettings();
   elements.userName.value = settings.userName || state.currentUser?.displayName || "";
-  elements.reportEmail.value = settings.reportEmail || "";
   elements.whatsappNumber.value = settings.whatsappNumber || "";
-  elements.emailEnabled.checked = Boolean(settings.emailEnabled);
   elements.whatsappEnabled.checked = Boolean(settings.whatsappEnabled);
+  syncSettingsToggleState();
+}
+
+function syncSettingsToggleState() {
+  document.querySelectorAll("#settingsForm .toggle-chip").forEach((chip) => {
+    const input = chip.querySelector("input");
+    chip.classList.toggle("active", Boolean(input?.checked));
+  });
+}
+
+function setSettingsStatus(message, type) {
+  elements.settingsStatus.textContent = message || "";
+  elements.settingsStatus.classList.toggle("hidden", !message);
+  elements.settingsStatus.dataset.state = type || "";
 }
 
 function syncConnectionStatus() {
@@ -611,7 +798,7 @@ function getSelectedParticipants() {
 function buildExpenseMeta(expense) {
   const parts = [formatHumanDate(expense.date), expense.category];
   parts.push(expense.type === "shared" ? `Paid by ${resolveUserName(expense.paidByUserId, expense.groupId)}` : "Personal only");
-  return parts.join(" � ");
+  return parts.join(" • ");
 }
 
 function resolveUserName(userId, groupId) {
@@ -809,15 +996,37 @@ function normalizeGroups(groups) {
 function defaultSettings() {
   return {
     userName: state.currentUser?.displayName || "You",
-    reportEmail: "",
     whatsappNumber: "",
-    emailEnabled: false,
     whatsappEnabled: false,
   };
 }
 
+function buildAssistantWelcome() {
+  return [
+    {
+      role: "assistant",
+      content: "Ask me things like “Show my travel expenses”, “How much did I spend last month?”, or “Who owes me the most money?”",
+    },
+  ];
+}
+
+function readAssistantSessionId() {
+  const existing = window.localStorage.getItem(assistantSessionStorageKey);
+  if (existing) {
+    return existing;
+  }
+
+  const created = window.crypto?.randomUUID ? window.crypto.randomUUID() : `session-${Date.now()}`;
+  window.localStorage.setItem(assistantSessionStorageKey, created);
+  return created;
+}
+
 function currentUserName() {
   return state.settings?.userName || state.currentUser?.displayName || "You";
+}
+
+function optionExists(selectElement, value) {
+  return Array.from(selectElement.options).some((option) => option.value === value);
 }
 
 function sumAmounts(items) {
@@ -847,7 +1056,26 @@ function formatHumanDate(value) {
   return new Date(`${value}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 }
 
+function formatDateTime(value) {
+  return value ? new Date(value).toLocaleString("en-IN") : "Unknown time";
+}
+
 function roundCurrency(value) {
   return Number(value.toFixed(2));
 }
+
+function capitalize(value) {
+  const text = String(value || "");
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : "";
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 

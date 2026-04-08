@@ -1,11 +1,16 @@
 function getSettings(database, user) {
+  const notifications = Array.isArray(database.reports?.notifications)
+    ? database.reports.notifications.filter((entry) => entry.userId === user.id).slice(0, 10)
+    : [];
+
   return {
     userId: user.id,
     userName: user.displayName,
-    reportEmail: user.reportEmail || "",
     whatsappNumber: user.whatsappNumber || "",
-    emailEnabled: Boolean(user.emailEnabled),
     whatsappEnabled: Boolean(user.whatsappEnabled),
+    lastCommunicationAt: user.lastCommunicationAt || null,
+    recentNotifications: notifications,
+    customCategoryRules: Array.isArray(user.customCategoryRules) ? user.customCategoryRules : [],
   };
 }
 
@@ -17,10 +22,10 @@ function updateSettings(database, user, payload) {
   }
 
   target.displayName = payload.userName ?? target.displayName;
-  target.reportEmail = payload.reportEmail ?? target.reportEmail;
   target.whatsappNumber = payload.whatsappNumber ?? target.whatsappNumber;
-  target.emailEnabled = payload.emailEnabled ?? target.emailEnabled;
   target.whatsappEnabled = payload.whatsappEnabled ?? target.whatsappEnabled;
+  target.reportEmail = "";
+  target.emailEnabled = false;
 
   return getSettings(database, target);
 }

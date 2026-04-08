@@ -18,6 +18,14 @@ const {
   getLatestWeeklyReport,
   runReportsNow,
 } = require("../services/reporting");
+const { answerExpenseQuestion, getConversationState } = require("../services/ai-v2");
+const {
+  getCategoryMemory,
+  learnCategoryRule,
+  predictCategory,
+  processReceipt,
+} = require("../services/categorization");
+const { getNotificationHistory, updateWhatsAppDeliveryStatus } = require("../services/notifications");
 const { getSettings, updateSettings } = require("../services/settings");
 const { createSession, getRequestUser, requireAuthenticatedUser } = require("../services/auth");
 
@@ -27,6 +35,12 @@ function createApiRouter(app) {
 
   router.get("/health", (request, response) => {
     response.json({ ok: true });
+  });
+
+  router.post("/notifications/webhooks/twilio", (request, response) => {
+    updateWhatsAppDeliveryStatus(app.locals.database, request.body || {});
+    app.locals.saveDatabase();
+    response.status(200).send("ok");
   });
 
   router.post("/session", (request, response) => {
@@ -85,6 +99,30 @@ function createApiRouter(app) {
     response.json(getDashboardSummary(app.locals.database, request.currentUser, request.query.date));
   });
 
+  router.get("/categorization/memory", (request, response) => {
+    response.json(getCategoryMemory(request.currentUser));
+  });
+
+  router.post("/categorization/predict", (request, response) => {
+    response.json(predictCategory(app.locals.database, request.currentUser, request.body));
+  });
+
+  router.post("/categorization/learn", (request, response) => {
+    const rule = learnCategoryRule(app.locals.database, request.currentUser, request.body);
+
+    if (!rule) {
+      response.status(400).json({ message: "Merchant or keyword plus category is required" });
+      return;
+    }
+
+    app.locals.saveDatabase();
+    response.status(201).json(rule);
+  });
+
+  router.post("/receipts/process", (request, response) => {
+    response.json(processReceipt(app.locals.database, request.currentUser, request.body));
+  });
+
   router.get("/groups", (request, response) => {
     response.json(getGroups(app.locals.database, request.currentUser));
   });
@@ -140,6 +178,20 @@ function createApiRouter(app) {
     const settings = updateSettings(app.locals.database, request.currentUser, request.body);
     app.locals.saveDatabase();
     response.json(settings);
+  });
+
+  router.get("/notifications", (request, response) => {
+    response.json(getNotificationHistory(app.locals.database, request.currentUser));
+  });
+
+  router.get("/ai/conversations/:sessionId", async (request, response) => {
+    response.json(await getConversationState(app.locals.database, request.currentUser, request.params.sessionId));
+  });
+
+  router.post("/ai/chat", async (request, response) => {
+    const result = await answerExpenseQuestion(app.locals.database, request.currentUser, request.body || {});
+    app.locals.saveDatabase();
+    response.json(result);
   });
 
   return router;

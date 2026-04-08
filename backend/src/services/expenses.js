@@ -9,13 +9,14 @@ const {
   startOfWeek,
   sumAmounts,
 } = require("./utils");
+const { maybeLearnFromCorrection, predictCategory } = require("./categorization");
 
 function getExpenses(database, user) {
   return getAccessibleExpenses(database, user).sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
 function createExpense(database, user, payload) {
-  const expense = normalizeExpense(payload, {
+  const expense = normalizeExpense(applyPredictedCategory(database, user, payload), {
     ownerUserId: user.id,
     paidByUserId: user.id,
     type: "personal",
@@ -40,8 +41,10 @@ function updateExpense(database, user, expenseId, payload) {
     return null;
   }
 
-  const updatedExpense = normalizeExpense({ ...currentExpense, ...payload }, currentExpense);
+  const previousExpense = { ...currentExpense };
+  const updatedExpense = normalizeExpense(applyPredictedCategory(database, user, { ...currentExpense, ...payload }), currentExpense);
   database.expenses[index] = updatedExpense;
+  maybeLearnFromCorrection(database, user, previousExpense, updatedExpense);
   return updatedExpense;
 }
 
@@ -144,6 +147,25 @@ function normalizeExpense(payload, currentExpense = {}) {
     split: payload.split || currentExpense.split || null,
     createdAt: currentExpense.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+  };
+}
+
+function applyPredictedCategory(database, user, payload) {
+  if (payload.category) {
+    return payload;
+  }
+
+  const prediction = predictCategory(database, user, {
+    merchant: payload.title,
+    keyword: payload.title,
+    notes: payload.notes,
+    amount: payload.amount,
+    date: payload.date,
+  });
+
+  return {
+    ...payload,
+    category: prediction.category || "Other",
   };
 }
 

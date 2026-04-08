@@ -1,4 +1,5 @@
 const { generateId, getDateOnly } = require("./utils");
+const { predictCategory } = require("./categorization");
 
 function createGroup(database, user, payload) {
   const group = {
@@ -41,6 +42,13 @@ function addGroupExpense(database, user, groupId, payload) {
     return null;
   }
 
+  const category = payload.category || predictCategory(database, user, {
+    merchant: payload.title,
+    keyword: payload.title,
+    notes: payload.notes,
+    amount: payload.amount,
+    date: payload.date,
+  }).category;
   const participants = normalizeParticipantIds(payload.participants, group.memberUserIds);
   const paidByUserId = group.memberUserIds.includes(payload.paidByUserId) ? payload.paidByUserId : user.id;
   const split = buildSplit(payload, participants);
@@ -48,7 +56,7 @@ function addGroupExpense(database, user, groupId, payload) {
     id: generateId("expense"),
     title: payload.title || payload.category || "Shared expense",
     amount: Number(payload.amount),
-    category: payload.category || "Other",
+    category,
     date: payload.date || getDateOnly(),
     notes: payload.notes || "",
     type: "shared",

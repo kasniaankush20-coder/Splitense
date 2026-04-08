@@ -38,6 +38,8 @@ function createSession(database, payload) {
     whatsappNumber: "",
     emailEnabled: false,
     whatsappEnabled: false,
+    lastCommunicationAt: null,
+    customCategoryRules: [],
     createdAt: new Date().toISOString(),
   };
 

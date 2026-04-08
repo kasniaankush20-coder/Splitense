@@ -1,0 +1,38 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="40" y1="28" x2="212" y2="228" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1D6759"/>
+      <stop offset="0.55" stop-color="#11493F"/>
+      <stop offset="1" stop-color="#0A302A"/>
+    </linearGradient>
+    <linearGradient id="coinGradient" x1="154" y1="54" x2="188" y2="92" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8E2A1"/>
+      <stop offset="1" stop-color="#D5A63C"/>
+    </linearGradient>
+    <linearGradient id="ribbonGradient" x1="62" y1="80" x2="167" y2="181" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF8ED"/>
+      <stop offset="1" stop-color="#E9D8BF"/>
+    </linearGradient>
+    <filter id="shadow" x="20" y="18" width="216" height="220" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="12"/>
+      <feGaussianBlur stdDeviation="12"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.04 0 0 0 0 0.19 0 0 0 0 0.17 0 0 0 0.22 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_2"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_2" result="shape"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <rect x="32" y="30" width="192" height="192" rx="52" fill="url(#bgGradient)"/>
+    <rect x="42" y="40" width="172" height="172" rx="42" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="2"/>
+  </g>
+  <path d="M77 92.5C77 75.103 91.103 61 108.5 61H155C164.389 61 172 68.6112 172 78C172 87.3888 164.389 95 155 95H117C111.477 95 107 99.4772 107 105C107 110.523 111.477 115 117 115H141C158.121 115 172 128.879 172 146C172 163.121 158.121 177 141 177H91C81.6112 177 74 169.389 74 160C74 150.611 81.6112 143 91 143H138C143.523 143 148 138.523 148 133C148 127.477 143.523 123 138 123H108.5C91.103 123 77 108.897 77 91.5V92.5Z" fill="url(#ribbonGradient)"/>
+  <path d="M98 78H160" stroke="#F3E7D3" stroke-opacity="0.35" stroke-width="4" stroke-linecap="round"/>
+  <path d="M92 159H152" stroke="#F3E7D3" stroke-opacity="0.25" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="169" cy="73" r="18" fill="url(#coinGradient)"/>
+  <circle cx="169" cy="73" r="17" stroke="#F9F0D0" stroke-opacity="0.6" stroke-width="2"/>
+  <path d="M169 63V83" stroke="#315A4B" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M179 73H159" stroke="#315A4B" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M78 195C95 182.5 110 179 126 179C146 179 161 184 178 197" stroke="#E3C98E" stroke-opacity="0.9" stroke-width="6" stroke-linecap="round"/>
+</svg>

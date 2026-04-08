@@ -1,0 +1,17 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="favBg" x1="10" y1="8" x2="54" y2="57" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1D6759"/>
+      <stop offset="1" stop-color="#0A302A"/>
+    </linearGradient>
+    <linearGradient id="favCoin" x1="39" y1="12" x2="48" y2="22" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8E2A1"/>
+      <stop offset="1" stop-color="#D5A63C"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="18" fill="url(#favBg)"/>
+  <path d="M20 24.5C20 19.2533 24.2533 15 29.5 15H43C45.7614 15 48 17.2386 48 20C48 22.7614 45.7614 25 43 25H31C29.3431 25 28 26.3431 28 28C28 29.6569 29.3431 31 31 31H37C43.6274 31 49 36.3726 49 43C49 49.6274 43.6274 55 37 55H23C20.2386 55 18 52.7614 18 50C18 47.2386 20.2386 45 23 45H36C37.6569 45 39 43.6569 39 42C39 40.3431 37.6569 39 36 39H29.5C24.2533 39 20 34.7467 20 29.5V24.5Z" fill="#F5E9D6"/>
+  <circle cx="46" cy="18" r="6" fill="url(#favCoin)"/>
+  <path d="M46 15V21" stroke="#315A4B" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M49 18H43" stroke="#315A4B" stroke-width="2.2" stroke-linecap="round"/>
+</svg>

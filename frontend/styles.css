@@ -69,6 +69,13 @@ textarea {
   resize: vertical;
 }
 
+.field-hint {
+  margin: 0.45rem 0 0;
+  font-size: 0.82rem;
+  color: #6a665f;
+  line-height: 1.4;
+}
+
 h1,
 h2,
 h3,
@@ -100,6 +107,20 @@ p {
   align-items: center;
 }
 
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.brand-mark {
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 1rem;
+  flex: 0 0 auto;
+  box-shadow: 0 16px 34px rgba(13, 49, 42, 0.24);
+}
+
 .app-header {
   margin-bottom: 0.9rem;
 }
@@ -118,6 +139,7 @@ p {
 h1 {
   font-size: 1.72rem;
   line-height: 1.1;
+  letter-spacing: -0.03em;
 }
 
 h2 {
@@ -164,7 +186,7 @@ label {
   top: 0.6rem;
   z-index: 10;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.5rem;
   backdrop-filter: blur(10px);
 }
@@ -259,12 +281,14 @@ label {
 .group-tabs,
 .expense-list,
 .report-stack,
+.notification-list,
 .chip-grid,
 .settlement-list,
 .action-grid,
 .balance-grid,
 .two-up,
-.split-choice {
+.split-choice,
+.assistant-messages {
   display: grid;
   gap: 0.8rem;
 }
@@ -302,7 +326,9 @@ label {
 .balance-card,
 .expense-item,
 .mini-report,
-.settlement-item {
+.settlement-item,
+.notification-item,
+.assistant-message {
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -311,7 +337,9 @@ label {
 .mini-card,
 .balance-card,
 .mini-report,
-.settlement-item {
+.settlement-item,
+.notification-item,
+.assistant-message {
   padding: 1rem;
 }
 
@@ -361,6 +389,44 @@ label {
   background: var(--accent-soft);
   border-color: #c6e3da;
   color: var(--accent-strong);
+}
+
+#settingsForm input,
+#settingsForm button,
+#settingsForm .toggle-chip {
+  position: relative;
+  z-index: 1;
+}
+
+#settingsForm .toggle-chip {
+  cursor: pointer;
+}
+
+#settingsForm .toggle-chip.active {
+  background: var(--accent-soft);
+  border-color: #c6e3da;
+  color: var(--accent-strong);
+}
+
+#settingsForm .toggle-chip input {
+  accent-color: var(--accent);
+}
+
+#savePreferencesButton:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+#settingsStatus[data-state="success"] {
+  color: var(--accent-strong);
+}
+
+#settingsStatus[data-state="error"] {
+  color: var(--danger);
+}
+
+#settingsStatus[data-state="info"] {
+  color: var(--muted);
 }
 
 .chip-option input,
@@ -436,6 +502,82 @@ label {
   padding: 1rem;
   color: var(--muted);
   text-align: center;
+}
+
+.delivery-block {
+  margin-top: 1rem;
+}
+
+.compact-head {
+  margin-bottom: 0.75rem;
+}
+
+.notification-item p,
+.assistant-message p {
+  margin-top: 0.45rem;
+  line-height: 1.55;
+}
+
+.notification-item small,
+.assistant-message span {
+  color: var(--muted);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.28rem 0.6rem;
+  font-size: 0.78rem;
+  text-transform: capitalize;
+  background: var(--surface-soft);
+}
+
+.status-badge.sent,
+.status-badge.delivered,
+.status-badge.queued {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.status-badge.failed {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.assistant-shell {
+  display: grid;
+  gap: 1rem;
+}
+
+.assistant-prompt-row {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.prompt-chip {
+  min-height: 42px;
+  padding: 0.7rem 1rem;
+}
+
+.assistant-messages {
+  max-height: 26rem;
+  overflow: auto;
+}
+
+.assistant-message.assistant {
+  background: linear-gradient(180deg, #f7fcfa 0%, #eef8f4 100%);
+  border-color: #cfe6de;
+}
+
+.assistant-message.user {
+  background: #fff8ef;
+}
+
+.assistant-form textarea {
+  min-height: 110px;
 }
 
 @media (min-width: 720px) {
